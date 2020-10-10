@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
+	"github.com/BSolarV/Tarea1/chat"
 )
 
 func main() {
@@ -14,6 +15,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Fail listening on port 9000: %v", err)
 	}
+
+	s := chat.Server{}
 
 	grpcServer := grpc.NewServer()
 
