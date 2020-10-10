@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
-	"github.com/BSolarV/Tarea1/chat"
+	pb "github.com/BSolarV/Tarea1/chat"
 )
 
 func main() {
