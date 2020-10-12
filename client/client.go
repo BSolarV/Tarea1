@@ -3,26 +3,24 @@ package main
 import (
 	"log"
 
+	"github.com/BSolarV/Tarea1/chat"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	pb "github.com/BSolarV/Tarea1/chat"
 )
 
 func main() {
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
+	conn, err := grpc.Dial("google.com:9000", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Couldn't connect: %s", err)
 	}
 	defer conn.Close()
 
-	c := chat.NewCharServiceClient(conn)
+	c := chat.NewChatServiceClient(conn)
 
-	message = chat.Message{
-		Body: "Hello from the Client",
-	}
+	message := chat.Message{Body: "Hola Mundo"}
 
-	response, err := c.Sayhello(context.Background(), &message)
+	response, err := c.SayHello(context.Background(), &message)
 	if err != nil {
 		log.Fatalf("Error when calling SayHello: %s", err)
 	}

@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 
+	"github.com/BSolarV/Tarea1/chat"
 	"google.golang.org/grpc"
-	pb "github.com/BSolarV/Tarea1/chat"
 )
 
 func main() {
