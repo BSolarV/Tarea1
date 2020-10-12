@@ -1,0 +1,18 @@
+package chat
+
+import (
+	"log"
+
+	"golang.org/x/net/context"
+)
+
+type Server struct {
+}
+
+func (s *Server) SayHello(ctx context.Context, message *Message) (*Message, error) {
+	log.Printf("Recieved message from client: %s", message.Body)
+	return &Message{Body: "Hello! Im the server."}, nil
+}
+
+AskPackage(Empty) returns (Message) {}
+FinishPackage(Message) returns (Empty) {}
