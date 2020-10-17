@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package ProtoLogistic;
+
+enum TruckType {
+    UNDEFINED_TRUCK = 0;
+    RETAIL_TRUCK = 1;
+    NORMAL_TRUCK = 2;
+}
+
+/* 
+Para usar los enum: 
+    Package.Tipo da el tipo en enum
+    TruckType_RETAIL_TRUCK es un tipo del enum, pero estára dentro de ProtoLogistic
+        Se llamará mediante ProtoLogistic.TruckType_RETAIL_TRUCK
+    if Package.Tipo == ProtoLogistic.TruckType_RETAIL_TRUCK {}
+*/
+
+enum PackageType {
+    UNDEFINED_PACKAGE = 0;
+    RETAIL_PACKAGE = 1;
+    PRIORITY_PACKAGE = 2;
+    NORMAL_PACKAGE = 3;
+}
+
+message Package {
+    string IDPaquete = 1; 
+    PackageType Tipo = 2;
+    int32 Valor = 3;
+    string Origen = 4;
+    string Destino = 5;
+    int32 Intentos = 6;
+    string Estado = 7;
+    string Seguimiento = 8;
+}
+
+message Truck {
+    TruckType Type = 1;
+}
+
+message Empty {}
+
+service ProtoLogisticService {
+
+    rpc DeliverPackage(Package) returns (Empty) {}
+    rpc CheckStatus(Package) returns (Package) {}
+
+    rpc AskPackage(Truck) returns (Package) {}
+    rpc FinishPackage(Package) returns (Empty) {}
+}
+
+option go_package = "github.com/BSolarV/Tarea1/ProtoLogistic";
