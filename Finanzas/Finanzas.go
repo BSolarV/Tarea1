@@ -115,7 +115,7 @@ func (f *Finanzas) añadirPaquete(pkg *Paquete) {
 func (f *Finanzas) printRegistry() {
 	fmt.Println("-------------------------------------")
 	fmt.Printf(" %s | %s | %s | %s | %s | %s | %s |\n",
-		leftjust("ID", 5), leftjust("Descripcion", 15), leftjust("Tipo", 10),
+		leftjust("ID", 3), leftjust("Descripcion", 25), leftjust("Tipo", 10),
 		leftjust("Intentos", 8), leftjust("Estado", 15), leftjust("Valor", 6), leftjust("Balance", 8))
 	for _, pkg := range f.registry {
 		fmt.Printf(" %s | %s | %s | %s | %s | %s | %s |\n",
@@ -124,8 +124,8 @@ func (f *Finanzas) printRegistry() {
 			leftjust(strconv.Itoa(pkg.Balance), 8))
 	}
 	fmt.Printf(" %s   %s   %s   %s   %s   %s | %s |\n",
-		leftjust(" ", 5), leftjust(" ", 15), leftjust(" ", 10),
-		leftjust(" ", 8), leftjust(" ", 15), leftjust(" ", 6), leftjust(strconv.Itoa(f.balance), 8))
+		leftjust(" ", 3), leftjust(" ", 25), leftjust(" ", 10),
+		leftjust(" ", 8), leftjust(" ", 15), leftjust("Total:", 6), leftjust(strconv.Itoa(f.balance), 8))
 	fmt.Println("-------------------------------------")
 }
 
