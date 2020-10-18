@@ -94,7 +94,7 @@ func ParsePymes() []*ProtoLogistic.Package {
 	var result []*ProtoLogistic.Package
 
 	// Open the file
-	csvfile, err := os.Open("file/pymes.csv")
+	csvfile, err := os.Open("files/pymes.csv")
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
 	}
@@ -144,7 +144,7 @@ func ParseRetail() []*ProtoLogistic.Package {
 	var result []*ProtoLogistic.Package
 
 	// Open the file
-	csvfile, err := os.Open("file/retail.csv")
+	csvfile, err := os.Open("files/retail.csv")
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
 	}
