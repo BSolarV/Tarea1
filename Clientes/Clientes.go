@@ -17,7 +17,7 @@ import (
 
 func main() {
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
+	conn, err := grpc.Dial("10.10.28.63:9000", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Couldn't connect: %s", err)
 	}
@@ -94,7 +94,7 @@ func ParsePymes() []*ProtoLogistic.Package {
 	var result []*ProtoLogistic.Package
 
 	// Open the file
-	csvfile, err := os.Open("pymes.csv")
+	csvfile, err := os.Open("file/pymes.csv")
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
 	}
@@ -144,7 +144,7 @@ func ParseRetail() []*ProtoLogistic.Package {
 	var result []*ProtoLogistic.Package
 
 	// Open the file
-	csvfile, err := os.Open("retail.csv")
+	csvfile, err := os.Open("file/retail.csv")
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
 	}
