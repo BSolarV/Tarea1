@@ -2,25 +2,57 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"strconv"
 	"sync"
 
+	"github.com/streadway/amqp"
+
 	ProtoLogistic "github.com/BSolarV/Tarea1/ProtoLogistic"
 	"google.golang.org/grpc"
 )
 
 func main() {
-
+	//Conexión con grpc
 	lis, err := net.Listen("tcp", ":9000")
 
 	if err != nil {
 		log.Fatalf("Fail listening on port 9000: %v", err)
 	}
 
-	srv := NewServer()
+	//Conexión al servidor de rabbitmq
+	con, er := amqp.Dial("amqp://winducloveer:secret@localhost:5672/")
+	if er != nil {
+		fmt.Println(er)
+		panic(er)
+	}
+	defer con.Close()
+
+	ch, er := con.Channel()
+	if er != nil {
+		fmt.Println(er)
+		panic(er)
+	}
+	defer ch.Close()
+
+	q, er := ch.QueueDeclare(
+		"WinduCloverQueue",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if er != nil {
+		fmt.Println(er)
+		panic(er)
+	}
+
+	srv := NewServer(con, ch, &q)
 
 	grpcServer := grpc.NewServer()
 
@@ -29,14 +61,22 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to mount GRPC server on port 9000: %v", err)
 	}
+	//###############################
 
 }
 
 //Server (server)
 type Server struct {
+	//Registro de Odín
 	registry map[string]*ProtoLogistic.Package
 
+	//Para locks y unlocks
 	mutex sync.Mutex
+
+	//Atributos conexión rabbitmq
+	con *amqp.Connection
+	ch  *amqp.Channel
+	q   *amqp.Queue
 
 	// Active Queues
 	packageCount int
@@ -48,9 +88,14 @@ type Server struct {
 
 }
 
-func NewServer() *Server {
+//NewServer es el constructor del Server
+func NewServer(con *amqp.Connection, ch *amqp.Channel, q *amqp.Queue) *Server {
 	var srv Server
 	srv.registry = make(map[string]*ProtoLogistic.Package)
+
+	srv.con = con
+	srv.ch = ch
+	srv.q = q
 
 	return &srv
 }
@@ -170,10 +215,38 @@ func (s *Server) FinishPackage(ctx context.Context, truckPackage *ProtoLogistic.
 	fmt.Print("FinishPackage: ")
 	fmt.Printf("Id package : %s   Estado:  %s\n", truckPackage.GetIDPaquete(), truckPackage.GetEstado())
 
+	s.mutex.Lock()
+	auxPaq := paqueteFinanza(truckPackage)
+
+	s.SendToFinanzas(auxPaq)
+	s.mutex.Unlock()
+
 	return &ProtoLogistic.Empty{}, nil
 }
 
 //############################
+
+//Interacción con Finanzas
+
+//SendToFinanzas es la función que envia los paquetes a la cola de finanzas
+func (s *Server) SendToFinanzas(pkg *Paquete) {
+	body, _ := json.Marshal(pkg)
+
+	er := s.ch.Publish(
+		"",
+		"WinduCloverQueue",
+		false,
+		false,
+		amqp.Publishing{ContentType: "application/json",
+			Body: []byte(body),
+		},
+	)
+	if er != nil {
+		fmt.Println(er)
+		panic(er)
+	}
+
+}
 
 func printPackage(packag *ProtoLogistic.Package) {
 	fmt.Println("Printeando Paquete")
