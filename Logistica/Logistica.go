@@ -20,11 +20,11 @@ func main() {
 		log.Fatalf("Fail listening on port 9000: %v", err)
 	}
 
-	srv := Server{}
+	srv := NewServer()
 
 	grpcServer := grpc.NewServer()
 
-	ProtoLogistic.RegisterProtoLogisticServiceServer(grpcServer, &srv)
+	ProtoLogistic.RegisterProtoLogisticServiceServer(grpcServer, srv)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to mount GRPC server on port 9000: %v", err)
@@ -46,6 +46,13 @@ type Server struct {
 	normalQueue   []*ProtoLogistic.Package
 	// Punteros a los paquetes del registro, para facilitar la modificacion de registro
 
+}
+
+func NewServer() *Server {
+	var srv Server
+	srv.registry = make(map[string]*ProtoLogistic.Package)
+
+	return &srv
 }
 
 /*
@@ -78,11 +85,15 @@ func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogisti
 	clientPackage.IDPaquete = strconv.Itoa(s.packageCount)
 	clientPackage.Seguimiento = strconv.Itoa(s.packageCount)
 	clientPackage.Estado = "En bodega"
+
 	if clientPackage.GetTipo() == 1 { // Retail = 1
 		clientPackage.Seguimiento = "0"
 	}
+	// Debuging
+	log.Println("Antes del map")
 	s.registry[clientPackage.GetIDPaquete()] = clientPackage
-
+	// Debuging
+	log.Println("post map\n")
 	//Se añaden los objetos a la cola correspondiente
 	if clientPackage.GetTipo() == 1 {
 		s.retailQueue = append(s.retailQueue, clientPackage)
@@ -92,7 +103,7 @@ func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogisti
 		s.normalQueue = append(s.normalQueue, clientPackage)
 	}
 	s.mutex.Unlock()
-	fmt.Print("DeliverPackage")
+	fmt.Print("DeliverPackage: ")
 	fmt.Printf("Id package : %s   Estado:  %s\n", clientPackage.GetIDPaquete(), clientPackage.GetEstado())
 	return clientPackage, nil
 }
@@ -103,7 +114,7 @@ func (s *Server) CheckStatus(ctx context.Context, clientPackage *ProtoLogistic.P
 	seguimiento := clientPackage.GetSeguimiento()
 	paq := s.registry[seguimiento]
 
-	fmt.Print("CheckStatus")
+	fmt.Print("CheckStatus: ")
 	fmt.Printf("Id package : %s   Estado:  %s\n", paq.GetIDPaquete(), paq.GetEstado())
 	return paq, nil
 }
@@ -116,32 +127,33 @@ func (s *Server) CheckStatus(ctx context.Context, clientPackage *ProtoLogistic.P
 func (s *Server) AskPackage(ctx context.Context, truck *ProtoLogistic.Truck) (*ProtoLogistic.Package, error) {
 	tipoCamion := truck.GetType()
 	var paq *ProtoLogistic.Package
+	paq = &ProtoLogistic.Package{IDPaquete: "-1"}
 	if tipoCamion == 1 {
 		s.mutex.Lock()
-		if s.retailQueue != nil {
+		if len(s.retailQueue) != 0 {
 			paq = s.retailQueue[0]
 			s.retailQueue = s.retailQueue[1:]
-		} else if s.priorityQueue != nil {
+		} else if len(s.priorityQueue) != 0 {
 			paq = s.priorityQueue[0]
 			s.priorityQueue = s.priorityQueue[1:]
 		}
 		s.mutex.Unlock()
 	} else {
 		s.mutex.Lock()
-		if s.priorityQueue != nil {
+		if len(s.priorityQueue) != 0 {
 			paq = s.priorityQueue[0]
 			s.priorityQueue = s.priorityQueue[1:]
-		} else if s.normalQueue != nil {
+		} else if len(s.normalQueue) != 0 {
 			paq = s.normalQueue[0]
 			s.normalQueue = s.normalQueue[1:]
 		}
 		s.mutex.Unlock()
 	}
-	if paq != nil {
+	if paq.GetIDPaquete() != "-1" {
 		s.mutex.Lock()
 		paq.Estado = "En camino"
 		s.mutex.Unlock()
-		fmt.Print("CheckStatus")
+		fmt.Print("AskPackage: ")
 		fmt.Printf("Id package : %s   Estado:  %s\n", paq.GetIDPaquete(), paq.GetEstado())
 	}
 
@@ -155,10 +167,22 @@ func (s *Server) FinishPackage(ctx context.Context, truckPackage *ProtoLogistic.
 	s.registry[truckPackage.GetIDPaquete()] = truckPackage
 	s.mutex.Unlock()
 
-	fmt.Print("FinishStatus")
+	fmt.Print("FinishPackage: ")
 	fmt.Printf("Id package : %s   Estado:  %s\n", truckPackage.GetIDPaquete(), truckPackage.GetEstado())
 
 	return &ProtoLogistic.Empty{}, nil
 }
 
 //############################
+
+func printPackage(packag *ProtoLogistic.Package) {
+	fmt.Println("Printeando Paquete")
+	fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n desc: %s \n",
+		packag.GetIDPaquete(),
+		packag.GetTipo(),
+		packag.GetValor(),
+		packag.GetOrigen(),
+		packag.GetDestino(),
+		packag.GetProducto())
+	fmt.Println("Printeado!\n")
+}

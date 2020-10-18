@@ -64,7 +64,6 @@ func main() {
 			log.Printf("%d : Iniciando camion del tipo %s\n", i, truckType)
 
 			for {
-				var firstPkg *ProtoLogistic.Package
 
 				// Debuging
 				log.Printf("%d : Esperando Primer Paquete ...\n", i)
@@ -74,17 +73,14 @@ func main() {
 					if err != nil {
 						panic(err)
 					}
-					if pkg != nil {
-						firstPkg = pkg
+					if pkg.GetIDPaquete() != "-1" {
+						truck.pkgs = append(truck.pkgs, pkg)
 						break
 					}
 				}
-				truck.pkgs = append(truck.pkgs, firstPkg)
 
 				actualTime := time.Now()
 				finishTime := actualTime.Add(time.Duration(MaxWait) * time.Second)
-
-				var secondPkg *ProtoLogistic.Package
 
 				// Debuging
 				log.Printf("%d : Esperando Segundo Paquete...\n", i)
@@ -94,14 +90,13 @@ func main() {
 					if err != nil {
 						panic(err)
 					}
-					if pkg != nil {
-						secondPkg = pkg
+					if pkg.GetIDPaquete() != "-1" {
+						truck.pkgs = append(truck.pkgs, pkg)
 						break
 					}
 				}
-				truck.pkgs = append(truck.pkgs, secondPkg)
 
-				if secondPkg != nil {
+				if len(truck.pkgs) == 2 {
 					if truck.pkgs[0].GetValor() < truck.pkgs[1].GetValor() {
 						truck.pkgs[0], truck.pkgs[1] = truck.pkgs[1], truck.pkgs[0]
 					}
@@ -185,7 +180,12 @@ func main() {
 						panic(err)
 					}
 				}
-				truck.pkgsDone = truck.pkgsDone[:0]
+
+				fmt.Print(truck.pkgsDone, "\n")
+				truck.pkgsDone = nil
+				truck.pkgs = nil
+				truck.pkgsToDeliver = nil
+				fmt.Print(truck.pkgsDone, "\n")
 			}
 		}(i)
 	}

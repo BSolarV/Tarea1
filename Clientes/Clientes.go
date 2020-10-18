@@ -44,6 +44,10 @@ func main() {
 			}
 			pack := retailPackages[0]
 			retailPackages = retailPackages[1:]
+
+			// Debugging
+			printPackage(pack)
+
 			_, err := clientService.DeliverPackage(context.Background(), pack)
 			if err != nil {
 				panic(err)
@@ -70,13 +74,14 @@ func main() {
 				panic(err)
 			}
 			fmt.Println("Printeando Paquete")
-			fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n desc: %s \n",
+			fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n \t desc: %s \n \t ******* ESTADO : %s ********\n:",
 				packag.GetIDPaquete(),
 				packag.GetTipo(),
 				packag.GetValor(),
 				packag.GetOrigen(),
 				packag.GetDestino(),
-				packag.GetProducto())
+				packag.GetProducto(),
+				packag.GetEstado())
 			fmt.Println("Printeado!")
 		}
 	}
@@ -177,4 +182,16 @@ func ParseRetail() []*ProtoLogistic.Package {
 		result = append(result, &packageToAdd)
 	}
 	return result
+}
+
+func printPackage(packag *ProtoLogistic.Package) {
+	fmt.Println("Printeando Paquete")
+	fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n desc: %s \n",
+		packag.GetIDPaquete(),
+		packag.GetTipo(),
+		packag.GetValor(),
+		packag.GetOrigen(),
+		packag.GetDestino(),
+		packag.GetProducto())
+	fmt.Println("Printeado!\n")
 }
