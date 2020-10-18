@@ -28,6 +28,7 @@ func main() {
 	fmt.Print("Tiempo espera segundo paquete (en segundos): ")
 	text, _ := reader.ReadString('\n')
 	text = strings.Replace(text, "\n", "", -1)
+	text = strings.Replace(text, "\r", "", -1)
 	MaxWait, err := strconv.Atoi(text)
 	if err != nil {
 		panic(err)
@@ -36,6 +37,7 @@ func main() {
 	fmt.Print("Tiempo de viaje (en segundos): ")
 	text, _ = reader.ReadString('\n')
 	text = strings.Replace(text, "\n", "", -1)
+	text = strings.Replace(text, "\r", "", -1)
 	TravelTime, err := strconv.Atoi(text)
 	if err != nil {
 		panic(err)
@@ -53,13 +55,20 @@ func main() {
 			truckType = 2
 		}
 		wg.Add(1)
-		go func() {
+		go func(i int) {
 			defer wg.Done()
 
 			truck := Truck{Type: truckType}
 
+			// Debuging
+			log.Printf("%d : Iniciando camion del tipo %s\n", i, truckType)
+
 			for {
 				var firstPkg *ProtoLogistic.Package
+
+				// Debuging
+				log.Printf("%d : Esperando Primer Paquete ...\n", i)
+
 				for {
 					pkg, err := truckService.AskPackage(context.Background(), &ProtoLogistic.Truck{Type: truck.Type})
 					if err != nil {
@@ -76,6 +85,10 @@ func main() {
 				finishTime := actualTime.Add(time.Duration(MaxWait) * time.Second)
 
 				var secondPkg *ProtoLogistic.Package
+
+				// Debuging
+				log.Printf("%d : Esperando Segundo Paquete...\n", i)
+
 				for time.Now().Before(finishTime) {
 					pkg, err := truckService.AskPackage(context.Background(), &ProtoLogistic.Truck{Type: truck.Type})
 					if err != nil {
@@ -122,6 +135,9 @@ func main() {
 						maxTries: pkgMaxTries})
 				}
 
+				// Debuging
+				log.Printf("%d : Iniciando viajes\n", i)
+
 				for len(truck.pkgsToDeliver) != 0 {
 
 					truck.pkgsToDeliver[0].addATry()
@@ -129,12 +145,21 @@ func main() {
 					time.Sleep(time.Duration(TravelTime) * time.Second)
 
 					if rand.Intn(100) < 80 {
+
+						// Debuging
+						log.Printf("%d : Entrega exitosa de %s\n", i, truck.pkgsToDeliver[0].pkg.GetIDPaquete())
+
 						truck.pkgsToDeliver[0].setStatus("Recibido")
 						truck.pkgsToDeliver[0].setDeliveredDate(true)
 						truck.pkgsDone = append(truck.pkgsDone, truck.pkgsToDeliver[0])
 						truck.registry = append(truck.registry, truck.pkgsToDeliver[0])
 						truck.pkgsToDeliver = truck.pkgsToDeliver[1:]
+
 					} else if truck.pkgsToDeliver[0].checkMaxTries() {
+
+						// Debuging
+						log.Printf("%d : Quiting de %s\n", i, truck.pkgsToDeliver[0].pkg.GetIDPaquete())
+
 						truck.pkgsToDeliver[0].setStatus("No Recibido")
 						truck.pkgsToDeliver[0].setDeliveredDate(false)
 						truck.pkgsDone = append(truck.pkgsDone, truck.pkgsToDeliver[0])
@@ -146,6 +171,9 @@ func main() {
 				}
 
 				time.Sleep(time.Duration(TravelTime) * time.Second)
+
+				// Debuging
+				log.Printf("%d : De vuelta en central.\n", i)
 
 				for _, pkg := range truck.pkgsDone {
 					var pkgToSend *ProtoLogistic.Package
@@ -159,11 +187,12 @@ func main() {
 				}
 				truck.pkgsDone = truck.pkgsDone[:0]
 			}
-		}()
+		}(i)
 	}
-
+	wg.Wait()
 }
 
+// Truck : Estructura de estados de un camion
 type Truck struct {
 	Type          ProtoLogistic.TruckType
 	pkgs          []*ProtoLogistic.Package

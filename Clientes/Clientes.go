@@ -36,6 +36,7 @@ func main() {
 		fmt.Print("0 : Retail - 1 : Pyme - 3 : codigo -> ")
 		text, _ := reader.ReadString('\n')
 		text = strings.Replace(text, "\n", "", -1)
+		text = strings.Replace(text, "\r", "", -1)
 		if strings.Compare("0", text) == 0 {
 			if len(retailPackages) == 0 {
 				fmt.Println("We are out of that.")
@@ -63,6 +64,7 @@ func main() {
 			fmt.Print("Ingrese codigo de seguimiento -> ")
 			text, _ := reader.ReadString('\n')
 			text = strings.Replace(text, "\n", "", -1)
+			text = strings.Replace(text, "\r", "", -1)
 			packag, err := clientService.CheckStatus(context.Background(), &ProtoLogistic.Package{Seguimiento: text})
 			if err != nil {
 				panic(err)
