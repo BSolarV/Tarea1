@@ -43,7 +43,7 @@ message Empty {}
 
 service ProtoLogisticService {
 
-    rpc DeliverPackage(Package) returns (Empty) {}
+    rpc DeliverPackage(Package) returns (Package) {}
     rpc CheckStatus(Package) returns (Package) {}
 
     rpc AskPackage(Truck) returns (Package) {}

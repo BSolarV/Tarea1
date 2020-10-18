@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"encoding/csv"
 	"io"
 	"log"
@@ -20,17 +21,36 @@ func main() {
 	}
 	defer conn.Close()
 
-	c := ProtoLogistic.NewProtoLogisticServiceClient(conn)
+	clientService := ProtoLogistic.NewProtoLogisticServiceClient(conn)
+
+	pymesPackages := ParsePymes()
+	retailPackages := ParseRetail()
 
 	var wg sync.WaitGroup
-	for i := 0; i < 3; i++ {
-		wg.Add(1)
-		wg.Done()
+
+	// For testing
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("0 : Retail - 1 : Pyme - 3 : codigo -> ")
+		text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+		if strings.Compare("1", text) == 0 {
+			if len(pymesPackages) == 0:
+				fmt.Println("We are out of that.")
+				continue
+			package := pymesPackages[0]
+			pymesPackages = pymesPackages[1:]
+			response , err := clientService.DeliverPackage(context.Background(), &package)
+			if err != nil{
+				panic(err)
+			}
+			
+		}
 	}
-	wg.Wait()
+	
 }
 
-func GetPymes() []ProtoLogistic.Package {
+func ParsePymes() []ProtoLogistic.Package {
 
 	var result []ProtoLogistic.Package
 
@@ -79,7 +99,7 @@ func GetPymes() []ProtoLogistic.Package {
 	return result
 }
 
-func GetRetail() []ProtoLogistic.Package {
+func ParseRetail() []ProtoLogistic.Package {
 
 	var result []ProtoLogistic.Package
 
