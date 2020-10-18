@@ -119,7 +119,7 @@ func (f *Finanzas) printRegistry() {
 		leftjust("Intentos", 8), leftjust("Estado", 15), leftjust("Valor", 6), leftjust("Balance", 8))
 	for _, pkg := range f.registry {
 		fmt.Printf(" %s | %s | %s | %s | %s | %s | %s |\n",
-			leftjust(pkg.IDPaquete, 3), leftjust(pkg.Descripcion, 25), leftjust(pkg.Tipo, 10),
+			leftjust(pkg.IDPaquete, 3), leftjust(pkg.Descripcion, 25), leftjust(pkg.Tipo, 13),
 			leftjust(strconv.Itoa(pkg.Intentos), 8), leftjust(pkg.Estado, 15), leftjust(strconv.Itoa(pkg.ValorOriginal), 6),
 			leftjust(strconv.Itoa(pkg.Balance), 8))
 	}
