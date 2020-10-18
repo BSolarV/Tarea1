@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -48,7 +49,7 @@ func main() {
 	finanzas := Finanzas{}
 
 	pkgs, err := channel.Consume(
-		"WinducloveerQueue",
+		"WinduCloveerQueue",
 		"",
 		true,
 		false,
@@ -64,16 +65,15 @@ func main() {
 	}()
 
 	forever := make(chan bool)
-	var pkg *Paquete
+	var pkg Paquete
 	go func() {
 		for binaryPkg := range pkgs {
-			fmt.Println("Paquete recibido")
-			err := json.Unmarshal(binaryPkg.Body, pkg)
+			err := json.Unmarshal(binaryPkg.Body, &pkg)
 			if err != nil {
 				fmt.Println(err)
 				panic(err)
 			}
-			finanzas.añadirPaquete(pkg)
+			finanzas.añadirPaquete(&pkg)
 		}
 	}()
 	<-forever
@@ -81,50 +81,52 @@ func main() {
 
 // Paquete : Estructura para facilitar marshaling en Json
 type Paquete struct {
-	idPaquete     string
-	descripcion   string
-	tipo          string
-	intentos      int
-	estado        string
-	valorOriginal int
-	balance       int
+	IDPaquete     string `json:"idPaquete"`
+	Descripcion   string `json:"descripcion"`
+	Tipo          string `json:"tipo"`
+	Estado        string `json:"estado"`
+	Intentos      int    `json:"intentos"`
+	ValorOriginal int    `json:"valorOriginal"`
+	Balance       int    `json:"balance"`
 }
 
 // Finanzas : Estructura para mantener registros
 type Finanzas struct {
-	registry []*Paquete
+	registry []Paquete
 	balance  int
 }
 
 func (f *Finanzas) añadirPaquete(pkg *Paquete) {
-	pkg.balance = 0
-	if pkg.tipo == "Prioritario" {
-		pkg.balance += int(math.Round(float64(pkg.valorOriginal) * 0.3))
+	pkg.Balance = 0
+	if pkg.Tipo == "Prioritario" {
+		pkg.Balance += int(math.Round(float64(pkg.ValorOriginal) * 0.3))
 	}
-	if pkg.estado == "Recibido" {
-		pkg.balance += pkg.valorOriginal
-	} else if pkg.tipo == "Retail" {
-		pkg.balance += pkg.valorOriginal
+	if pkg.Estado == "Recibido" {
+		pkg.Balance += pkg.ValorOriginal
+	} else if pkg.Tipo == "Retail" {
+		pkg.Balance += pkg.ValorOriginal
 	}
-	pkg.balance = pkg.balance - 10*(pkg.intentos-1)
+	pkg.Balance = pkg.Balance - 10*(pkg.Intentos-1)
 
-	f.registry = append(f.registry, pkg)
-	f.balance += pkg.balance
+	f.registry = append(f.registry, *pkg)
+	f.balance += pkg.Balance
 }
 
 func (f *Finanzas) printRegistry() {
+	fmt.Println("-------------------------------------")
 	fmt.Printf(" %s | %s | %s | %s | %s | %s | %s |\n",
 		leftjust("ID", 5), leftjust("Descripcion", 15), leftjust("Tipo", 10),
 		leftjust("Intentos", 8), leftjust("Estado", 15), leftjust("Valor", 6), leftjust("Balance", 8))
 	for _, pkg := range f.registry {
 		fmt.Printf(" %s | %s | %s | %s | %s | %s | %s |\n",
-			leftjust(pkg.idPaquete, 5), leftjust(pkg.descripcion, 15), leftjust(pkg.tipo, 10),
-			leftjust(strconv.Itoa(pkg.intentos), 8), leftjust(pkg.estado, 15), leftjust(strconv.Itoa(pkg.valorOriginal), 6),
-			leftjust(strconv.Itoa(pkg.balance), 8))
+			leftjust(pkg.IDPaquete, 3), leftjust(pkg.Descripcion, 25), leftjust(pkg.Tipo, 10),
+			leftjust(strconv.Itoa(pkg.Intentos), 8), leftjust(pkg.Estado, 15), leftjust(strconv.Itoa(pkg.ValorOriginal), 6),
+			leftjust(strconv.Itoa(pkg.Balance), 8))
 	}
 	fmt.Printf(" %s   %s   %s   %s   %s   %s | %s |\n",
 		leftjust(" ", 5), leftjust(" ", 15), leftjust(" ", 10),
 		leftjust(" ", 8), leftjust(" ", 15), leftjust(" ", 6), leftjust(strconv.Itoa(f.balance), 8))
+	fmt.Println("-------------------------------------")
 }
 
 func leftjust(s string, n int) string {
@@ -132,4 +134,12 @@ func leftjust(s string, n int) string {
 		return s
 	}
 	return s + strings.Repeat(" ", (n-len(s)))
+}
+
+func deserialize(b []byte) (Paquete, error) {
+	var msg Paquete
+	buf := bytes.NewBuffer(b)
+	decoder := json.NewDecoder(buf)
+	err := decoder.Decode(&msg)
+	return msg, err
 }

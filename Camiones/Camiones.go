@@ -25,6 +25,7 @@ func main() {
 	defer conn.Close()
 
 	reader := bufio.NewReader(os.Stdin)
+
 	fmt.Print("Tiempo espera segundo paquete (en segundos): ")
 	text, _ := reader.ReadString('\n')
 	text = strings.Replace(text, "\n", "", -1)

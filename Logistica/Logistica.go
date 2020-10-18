@@ -39,7 +39,7 @@ func main() {
 	defer ch.Close()
 
 	q, er := ch.QueueDeclare(
-		"WinduCloverQueue",
+		"WinduCloveerQueue",
 		false,
 		false,
 		false,
@@ -134,11 +134,7 @@ func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogisti
 	if clientPackage.GetTipo() == 1 { // Retail = 1
 		clientPackage.Seguimiento = "0"
 	}
-	// Debuging
-	log.Println("Antes del map")
 	s.registry[clientPackage.GetIDPaquete()] = clientPackage
-	// Debuging
-	log.Println("post map\n")
 	//Se añaden los objetos a la cola correspondiente
 	if clientPackage.GetTipo() == 1 {
 		s.retailQueue = append(s.retailQueue, clientPackage)
@@ -229,16 +225,21 @@ func (s *Server) FinishPackage(ctx context.Context, truckPackage *ProtoLogistic.
 //Interacción con Finanzas
 
 //SendToFinanzas es la función que envia los paquetes a la cola de finanzas
-func (s *Server) SendToFinanzas(pkg *Paquete) {
-	body, _ := json.Marshal(pkg)
-
-	er := s.ch.Publish(
+func (s *Server) SendToFinanzas(pkg Paquete) {
+	fmt.Println(pkg.IDPaquete)
+	body, er := json.Marshal(pkg)
+	if er != nil {
+		fmt.Println(er)
+		panic(er)
+	}
+	fmt.Println(string(body))
+	er = s.ch.Publish(
 		"",
-		"WinduCloverQueue",
+		"WinduCloveerQueue",
 		false,
 		false,
 		amqp.Publishing{ContentType: "application/json",
-			Body: []byte(body),
+			Body: body,
 		},
 	)
 	if er != nil {
@@ -262,29 +263,29 @@ func printPackage(packag *ProtoLogistic.Package) {
 
 // Paquete : Estructura para facilitar marshaling en Json
 type Paquete struct {
-	idPaquete     string
-	descripcion   string
-	tipo          string
-	estado        string
-	intentos      int
-	valorOriginal int
-	balance       int
+	IDPaquete     string `json:"idPaquete"`
+	Descripcion   string `json:"descripcion"`
+	Tipo          string `json:"tipo"`
+	Estado        string `json:"estado"`
+	Intentos      int    `json:"intentos"`
+	ValorOriginal int    `json:"valorOriginal"`
+	Balance       int    `json:"balance"`
 }
 
-func paqueteFinanza(pkg *ProtoLogistic.Package) *Paquete {
+func paqueteFinanza(pkg *ProtoLogistic.Package) Paquete {
 	var paq Paquete
-	paq.idPaquete = pkg.GetIDPaquete()
-	paq.descripcion = pkg.GetProducto()
+	paq.IDPaquete = pkg.GetIDPaquete()
+	paq.Descripcion = pkg.GetProducto()
 	tipo := pkg.GetTipo()
 	if tipo == 1 {
-		paq.tipo = "Retail"
+		paq.Tipo = "Retail"
 	} else if tipo == 2 {
-		paq.tipo = "Prioritario"
+		paq.Tipo = "Prioritario"
 	} else {
-		paq.tipo = "Normal"
+		paq.Tipo = "Normal"
 	}
-	paq.estado = pkg.GetEstado()
-	paq.intentos = int(pkg.GetIntentos())
-	paq.valorOriginal = int(pkg.GetValor())
-	return &paq
+	paq.Estado = pkg.GetEstado()
+	paq.Intentos = int(pkg.GetIntentos())
+	paq.ValorOriginal = int(pkg.GetValor())
+	return paq
 }
