@@ -25,13 +25,14 @@ enum PackageType {
 
 message Package {
     string IDPaquete = 1; 
-    PackageType Tipo = 2;
-    int32 Valor = 3;
-    string Origen = 4;
-    string Destino = 5;
-    int32 Intentos = 6;
-    string Estado = 7;
-    string Seguimiento = 8;
+    string Producto = 2;
+    PackageType Tipo = 3;
+    int32 Valor = 4;
+    string Origen = 5;
+    string Destino = 6;
+    int32 Intentos = 7;
+    string Estado = 8;
+    string Seguimiento = 9;
 }
 
 message Truck {
