@@ -1,13 +1,15 @@
 package main
 
 import (
-	"fmt"
+	"bufio"
+	"context"
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"strconv"
-	"sync"
+	"strings"
 
 	ProtoLogistic "github.com/BSolarV/Tarea1/ProtoLogistic"
 	"google.golang.org/grpc"
@@ -26,7 +28,7 @@ func main() {
 	pymesPackages := ParsePymes()
 	retailPackages := ParseRetail()
 
-	var wg sync.WaitGroup
+	// var wg sync.WaitGroup
 
 	// For testing
 	reader := bufio.NewReader(os.Stdin)
@@ -34,25 +36,55 @@ func main() {
 		fmt.Print("0 : Retail - 1 : Pyme - 3 : codigo -> ")
 		text, _ := reader.ReadString('\n')
 		text = strings.Replace(text, "\n", "", -1)
-		if strings.Compare("1", text) == 0 {
-			if len(pymesPackages) == 0:
+		if strings.Compare("0", text) == 0 {
+			if len(retailPackages) == 0 {
 				fmt.Println("We are out of that.")
 				continue
-			package := pymesPackages[0]
-			pymesPackages = pymesPackages[1:]
-			response , err := clientService.DeliverPackage(context.Background(), &package)
-			if err != nil{
+			}
+			pack := retailPackages[0]
+			retailPackages = retailPackages[1:]
+			_, err := clientService.DeliverPackage(context.Background(), pack)
+			if err != nil {
 				panic(err)
 			}
-			
+		} else if strings.Compare("1", text) == 0 {
+			if len(pymesPackages) == 0 {
+				fmt.Println("We are out of that.")
+				continue
+			}
+			pack := pymesPackages[0]
+			pymesPackages = pymesPackages[1:]
+			response, err := clientService.DeliverPackage(context.Background(), pack)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("El código de seguimiento es: %s \n", response.GetSeguimiento())
+		} else {
+			fmt.Print("Ingrese codigo de seguimiento -> ")
+			text, _ := reader.ReadString('\n')
+			text = strings.Replace(text, "\n", "", -1)
+			packag, err := clientService.CheckStatus(context.Background(), &ProtoLogistic.Package{Seguimiento: text})
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println("Printeando Paquete")
+			fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n desc: %s \n",
+				packag.GetIDPaquete(),
+				packag.GetTipo(),
+				packag.GetValor(),
+				packag.GetOrigen(),
+				packag.GetDestino(),
+				packag.GetProducto())
+			fmt.Println("Printeado!")
 		}
 	}
-	
+
 }
 
-func ParsePymes() []ProtoLogistic.Package {
+// ParsePymes Funcion para parsear CSV Pymes
+func ParsePymes() []*ProtoLogistic.Package {
 
-	var result []ProtoLogistic.Package
+	var result []*ProtoLogistic.Package
 
 	// Open the file
 	csvfile, err := os.Open("pymes.csv")
@@ -94,14 +126,15 @@ func ParsePymes() []ProtoLogistic.Package {
 			Valor:     value,
 			Origen:    record[3],
 			Destino:   record[4]}
-		result = append(result, packageToAdd)
+		result = append(result, &packageToAdd)
 	}
 	return result
 }
 
-func ParseRetail() []ProtoLogistic.Package {
+// ParseRetail Funcion para parsear CSV Retail
+func ParseRetail() []*ProtoLogistic.Package {
 
-	var result []ProtoLogistic.Package
+	var result []*ProtoLogistic.Package
 
 	// Open the file
 	csvfile, err := os.Open("retail.csv")
@@ -139,7 +172,7 @@ func ParseRetail() []ProtoLogistic.Package {
 			Valor:     value,
 			Origen:    record[3],
 			Destino:   record[4]}
-		result = append(result, packageToAdd)
+		result = append(result, &packageToAdd)
 	}
 	return result
 }
