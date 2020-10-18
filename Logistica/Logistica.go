@@ -186,3 +186,32 @@ func printPackage(packag *ProtoLogistic.Package) {
 		packag.GetProducto())
 	fmt.Println("Printeado!\n")
 }
+
+// Paquete : Estructura para facilitar marshaling en Json
+type Paquete struct {
+	idPaquete     string
+	descripcion   string
+	tipo          string
+	estado        string
+	intentos      int
+	valorOriginal int
+	balance       int
+}
+
+func paqueteFinanza(pkg *ProtoLogistic.Package) *Paquete {
+	var paq Paquete
+	paq.idPaquete = pkg.GetIDPaquete()
+	paq.descripcion = pkg.GetProducto()
+	tipo := pkg.GetTipo()
+	if tipo == 1 {
+		paq.tipo = "Retail"
+	} else if tipo == 2 {
+		paq.tipo = "Prioritario"
+	} else {
+		paq.tipo = "Normal"
+	}
+	paq.estado = pkg.GetEstado()
+	paq.intentos = int(pkg.GetIntentos())
+	paq.valorOriginal = int(pkg.GetValor())
+	return &paq
+}

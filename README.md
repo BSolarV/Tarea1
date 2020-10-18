@@ -6,19 +6,19 @@
 
 El usuario de las máquinas es: sd
 
-* Máquina 1
+* Máquina 1: Logistica
 	ip/hostname: 10.10.28.63
 	contraseña: RQykXsIOZSDOuzd
  
-* Máquina 2
+* Máquina 2: Camiones
 	ip/hostname: 10.10.28.64
 	contraseña: FcPkvnGbEWEAlie
  
-* Máquina 2 
+* Máquina 3: Clientes
 	ip/hostname: 10.10.28.65
 	contraseña: uNzXQlZUsGbKgND
  
-* Máquina 4
+* Máquina 4: Finanzas
 	ip/hostname: 10.10.28.66
 	contraseña: xysmRmDVuHkoWLk
 
