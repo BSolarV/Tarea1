@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -31,6 +32,7 @@ func main() {
 
 }
 
+//Server (server)
 type Server struct {
 	registry map[string]*ProtoLogistic.Package
 
@@ -66,13 +68,16 @@ Codigo de Getters
 	seguimiento := clientPackage.GetSeguimiento()
 */
 
-// Interacciones con el Cliente
+//Interacciones con el Cliente
+
+// DeliverPackage hace la acción después del pedido del cliente.
 func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogistic.Package) (*ProtoLogistic.Package, error) {
 	//Se guardan en el registro
 	s.mutex.Lock()
 	s.packageCount++
 	clientPackage.IDPaquete = strconv.Itoa(s.packageCount)
 	clientPackage.Seguimiento = strconv.Itoa(s.packageCount)
+	clientPackage.Estado = "En bodega"
 	if clientPackage.GetTipo() == 1 { // Retail = 1
 		clientPackage.Seguimiento = "0"
 	}
@@ -87,15 +92,19 @@ func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogisti
 		s.normalQueue = append(s.normalQueue, clientPackage)
 	}
 	s.mutex.Unlock()
-
+	fmt.Print("DeliverPackage")
+	fmt.Printf("Id package : %s   Estado:  %s\n", clientPackage.GetIDPaquete(), clientPackage.GetEstado())
 	return clientPackage, nil
 }
 
+//CheckStatus revisa el estado del paquete. Lo acciona el Cliente
 func (s *Server) CheckStatus(ctx context.Context, clientPackage *ProtoLogistic.Package) (*ProtoLogistic.Package, error) {
 	//Obtengo codigo de seguimiento
 	seguimiento := clientPackage.GetSeguimiento()
 	paq := s.registry[seguimiento]
 
+	fmt.Print("CheckStatus")
+	fmt.Printf("Id package : %s   Estado:  %s\n", paq.GetIDPaquete(), paq.GetEstado())
 	return paq, nil
 }
 
@@ -103,6 +112,7 @@ func (s *Server) CheckStatus(ctx context.Context, clientPackage *ProtoLogistic.P
 
 //Interacciones con los camiones
 
+//AskPackage es la acción de pedir un paquete. Lo hace el camión
 func (s *Server) AskPackage(ctx context.Context, truck *ProtoLogistic.Truck) (*ProtoLogistic.Package, error) {
 	tipoCamion := truck.GetType()
 	var paq *ProtoLogistic.Package
@@ -127,15 +137,26 @@ func (s *Server) AskPackage(ctx context.Context, truck *ProtoLogistic.Truck) (*P
 		}
 		s.mutex.Unlock()
 	}
+	if paq != nil {
+		s.mutex.Lock()
+		paq.Estado = "En camino"
+		s.mutex.Unlock()
+		fmt.Print("CheckStatus")
+		fmt.Printf("Id package : %s   Estado:  %s\n", paq.GetIDPaquete(), paq.GetEstado())
+	}
 
 	return paq, nil
 }
 
+//FinishPackage es la acción que se hace cuando el camión termina la entrega
 func (s *Server) FinishPackage(ctx context.Context, truckPackage *ProtoLogistic.Package) (*ProtoLogistic.Empty, error) {
 	//Se actualiza el registro
 	s.mutex.Lock()
 	s.registry[truckPackage.GetIDPaquete()] = truckPackage
 	s.mutex.Unlock()
+
+	fmt.Print("FinishStatus")
+	fmt.Printf("Id package : %s   Estado:  %s\n", truckPackage.GetIDPaquete(), truckPackage.GetEstado())
 
 	return &ProtoLogistic.Empty{}, nil
 }
