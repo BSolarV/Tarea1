@@ -4,10 +4,13 @@ import (
 	"context"
 	"log"
 	"net"
+	"sync"
 
 	ProtoLogistic "github.com/BSolarV/Tarea1/ProtoLogistic"
 	"google.golang.org/grpc"
 )
+
+
 
 func main() {
 
@@ -30,10 +33,13 @@ func main() {
 }
 
 type Server struct {
-	registry []ProtoLogistic.Package
+	registry map[ string ]ProtoLogistic.Package
+
+	mutex sync.Mutex
 
 	// Active Queues
 	packageCount  int
+
 	retailQueue   []*ProtoLogistic.Package
 	priotiryQueue []*ProtoLogistic.Package
 	normalQueue   []*ProtoLogistic.Package
@@ -49,18 +55,97 @@ type Server struct {
 	rpc FinishPackage(Package) returns (Empty) {}
 */
 
+/*
+Codigo de Getters
+	idPaquete := clientPackage.GetIDPaquete()
+	tipo := clientPackage.GetTipo()
+	valor := clientPackage.GetValor()
+	origen := clientPackage.GetOrigen()
+	destino := clientPackage.GetDestino()
+	intentos := clientPackage.GetIntentos()
+	estado := clientPackage.GetEstado()
+	seguimiento := clientPackage.GetSeguimiento()
+*/
+
+// Interacciones con el Cliente
 func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogistic.Package) (*ProtoLogistic.Empty, error) {
-	return nil, nil
+	//Se guardan en el registro
+	s.mutex.Lock()
+	s.packageCount += 1
+	clientPackage.IDPaquete = s.packageCount
+	clientPackage.Seguimiento = s.packageCount
+	if clientPackage.GetTipo == 1{ // Retail = 1
+		clientPackage.Seguimiento = 0
+	}
+	s.registry[clientPackage.GetIDPaquete()] = *clientPackage
+	s.mutex.Unlock()
+
+	return ProtoLogistic.Empty{}, nil
 }
 
 func (s *Server) CheckStatus(ctx context.Context, clientPackage *ProtoLogistic.Package) (*ProtoLogistic.Package, error) {
-	return nil, nil
+	//Obtengo codigo de seguimiento
+	seguimiento := clientPackage.GetSeguimiento()
+	paq := s.registry[seguimiento]
+
+	return &paq, nil
 }
 
+//############################################
+
+//Interacciones con los camiones
+
 func (s *Server) AskPackage(ctx context.Context, truck *ProtoLogistic.Truck) (*ProtoLogistic.Package, error) {
+	tipoCamion := truck.GetType()
+
+	if tipoCamion == 1 {
+		for _,id := range s.registry{
+			if s.registry[id].Estado == "En bodega" && s.registry[id].Tipo == 1 {
+				s.mutex.Lock()
+				s.registry[id].Estado = "En camino"
+				s.mutex.Unlock()
+				return nil, nil
+			} 
+		}
+		for _,id := range s.registry{
+			if s.registry[id].Estado == "En bodega" && s.registry[id].Tipo == 2 {
+				s.mutex.Lock()
+				s.registry[id].Estado = "En camino"
+				s.mutex.Unlock()
+				return nil, nil
+			} 
+		}
+		return nil,nil
+	}
+	else{
+		for _,id := range s.registry{
+			if s.registry[id].Estado == "En bodega" && s.registry[id].Tipo == 1 {
+				s.mutex.Lock()
+				s.registry[id].Estado = "En camino"
+				s.mutex.Unlock()
+				return nil, nil
+			} 
+		}
+		for _,id := range s.registry{
+			if s.registry[id].Estado == "En bodega" && s.registry[id].Tipo == 2 {
+				s.mutex.Lock()
+				s.registry[id].Estado = "En camino"
+				s.mutex.Unlock()
+				return nil, nil
+			} 
+		}
+		return nil,nil
+	}
 	return nil, nil
 }
 
 func (s *Server) FinishPackage(ctx context.Context, truckPackage *ProtoLogistic.Package) (*ProtoLogistic.Empty, error) {
-	return nil, nil
+	//Se actualiza el registro
+	s.mutex.Lock()
+	s.registry[truckPackage.GetIDPaquete].Estado = *truckPackage
+	s.mutex.Unlock()
+
+	return ProtoLogistic.Empty{}, nil
 }
+
+//############################
