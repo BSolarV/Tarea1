@@ -1,7 +1,7 @@
 # Tarea 1
 
 ## WinduCloveer
-> Carlos Jara Almendra - 201773036-5
+> Carlos Jara Almendra - 201773036-5  
 > Bastián Solar Vargas - 201773003-k
 
 ## Maquinas Viruales:
