@@ -1,13 +1,13 @@
-all: MainLogistica MainClientes MainCamiones MainFinanzas
+all: Logistica Clientes Camiones Finanzas
 
-MainLogistica: Logistica/Logistica.go
-	go build -o ./bin/MainLogistica ./Logistica/Logistica.go
+Logistica: Logistica/Logistica.go
+	go build -o ./bin/Logistica ./Logistica/Logistica.go
 
-MainClientes: Logistica/Logistica.go
-	go build -o ./bin/MainClientes ./Clientes/Clientes.go
+Clientes: Logistica/Logistica.go
+	go build -o ./bin/Clientes ./Clientes/Clientes.go
 
-MainCamiones: Camiones/Camiones.go
-	go build -o ./bin/MainCamiones ./Camiones/Camiones.go
+Camiones: Camiones/Camiones.go
+	go build -o ./bin/Camiones ./Camiones/Camiones.go
 
-MainFinanzas: Finanzas/Finanzas.go
-	go build -o ./bin/MainFinanzas ./Finanzas/Finanzas.go
+Finanzas: Finanzas/Finanzas.go
+	go build -o ./bin/Finanzas ./Finanzas/Finanzas.go

@@ -45,9 +45,6 @@ func main() {
 			pack := retailPackages[0]
 			retailPackages = retailPackages[1:]
 
-			// Debugging
-			printPackage(pack)
-
 			_, err := clientService.DeliverPackage(context.Background(), pack)
 			if err != nil {
 				panic(err)
@@ -189,5 +186,5 @@ func printPackage(packag *ProtoLogistic.Package) {
 		packag.GetOrigen(),
 		packag.GetDestino(),
 		packag.GetProducto())
-	fmt.Println("Printeado!\n")
+	fmt.Println("Printeado!")
 }
