@@ -1,6 +1,8 @@
 # Tarea 1
 
 ## WinduCloveer
+	> Carlos Jara Almendra - 201773036-5
+	> Bastián Solar Vargas - 201773003-k
 
 ## Maquinas Viruales:
 
@@ -25,11 +27,10 @@ El usuario de las máquinas es: sd
 # Consideraciones:
 ## Generales  
 * Las conexiones se definen en base a las maquinas virtuales asignadas, de forma que los ejecutables funcionarán efectivamente en su máquina correspondiente.  
-
-	> Logistica.exe -> Maquina 1: 10.10.28.63  
-	> Clientes.exe -> Maquina 2: 10.10.28.64  
-	> Camiones.exe -> Maquina 3: 10.10.28.65  
-	> Finanzas.exe -> Maquina 1: 10.10.28.66  
+	> Logistica -> Maquina 1: 10.10.28.63  
+	> Clientes -> Maquina 2: 10.10.28.64  
+	> Camiones -> Maquina 3: 10.10.28.65  
+	> Finanzas -> Maquina 1: 10.10.28.66  
 
 ## logistica:
 * Se ignora el campo ID que envien los clientes, pues los clientes no deben definir el id, es labor del sistema.

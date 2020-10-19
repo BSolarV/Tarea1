@@ -226,13 +226,11 @@ func (s *Server) FinishPackage(ctx context.Context, truckPackage *ProtoLogistic.
 
 //SendToFinanzas es la función que envia los paquetes a la cola de finanzas
 func (s *Server) SendToFinanzas(pkg Paquete) {
-	fmt.Println(pkg.IDPaquete)
 	body, er := json.Marshal(pkg)
 	if er != nil {
 		fmt.Println(er)
 		panic(er)
 	}
-	fmt.Println(string(body))
 	er = s.ch.Publish(
 		"",
 		"WinduCloveerQueue",

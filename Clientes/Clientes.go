@@ -73,16 +73,12 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println("Printeando Paquete")
-			fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n \t desc: %s \n \t ******* ESTADO : %s ********\n:",
-				packag.GetIDPaquete(),
-				packag.GetTipo(),
+			fmt.Printf("desc: %s; valor: %d; Origen: %s; Destino: %s; \n \t ******* ESTADO : %s ********\n",
+				packag.GetProducto(),
 				packag.GetValor(),
 				packag.GetOrigen(),
 				packag.GetDestino(),
-				packag.GetProducto(),
 				packag.GetEstado())
-			fmt.Println("Printeado!")
 		}
 	}
 
