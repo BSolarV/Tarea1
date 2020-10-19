@@ -65,35 +65,19 @@ func main() {
 
 		for len(auxPaq) != 0 {
 			mutex.Lock()
-			if strings.Compare("0", tipoCliente) == 0 {
-				if len(retailPackages) == 0 {
-					fmt.Println("We are out of that.")
-					continue
-				}
 
-				pack := retailPackages[0]
-				retailPackages = retailPackages[1:]
-				_, err := clientService.DeliverPackage(context.Background(), pack)
-				if err != nil {
-					panic(err)
-				}
+			pack := auxPaq[0]
+			auxPaq = auxPaq[1:]
+			response, err := clientService.DeliverPackage(context.Background(), pack)
+			if err != nil {
+				panic(err)
+			}
 
-			} else if strings.Compare("1", tipoCliente) == 0 {
-				if len(pymesPackages) == 0 {
-					fmt.Println("We are out of that.")
-					continue
-				}
-				pack := pymesPackages[0]
-				pymesPackages = pymesPackages[1:]
-				response, err := clientService.DeliverPackage(context.Background(), pack)
-				if err != nil {
-					panic(err)
-				}
-
+			if "1" == tipoCliente {
 				SegCodes = append(SegCodes, response.GetSeguimiento())
 				fmt.Printf("El código de seguimiento es: %s \n", response.GetSeguimiento())
 			}
-			auxPaq = auxPaq[1:]
+
 			mutex.Unlock()
 			time.Sleep(time.Duration(waitTime) * time.Second)
 		}
@@ -113,21 +97,19 @@ func main() {
 				if err != nil {
 					panic(err)
 				}
-				fmt.Println("Consultando Estado")
-				fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n \t desc: %s \n \t ******* ESTADO : %s ********\n:",
-					packag.GetIDPaquete(),
-					packag.GetTipo(),
+				fmt.Printf("desc: %s; valor: %d; Origen: %s; Destino: %s; \n \t ******* ESTADO : %s ********\n",
+					packag.GetProducto(),
 					packag.GetValor(),
 					packag.GetOrigen(),
 					packag.GetDestino(),
-					packag.GetProducto(),
 					packag.GetEstado())
-				fmt.Println("Printeado!")
-				mutex.Lock()
-				swap := reflect.Swapper(SegCodes)
-				swap(0, index)
-				SegCodes = SegCodes[1:]
-				mutex.Unlock()
+				if packag.GetEstado() == "Recibido" || packag.GetEstado() == "No Recibido" {
+					mutex.Lock()
+					swap := reflect.Swapper(SegCodes)
+					swap(0, index)
+					SegCodes = SegCodes[1:]
+					mutex.Unlock()
+				}
 				time.Sleep(time.Duration(waitTime) * time.Second)
 			}
 		}()
