@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const ipLogistica = "localhost"
+const ipLogistica = "10.10.28.63"
 
 func main() {
 	var conn *grpc.ClientConn
@@ -61,13 +61,7 @@ func main() {
 			}
 			truck := Truck{Type: truckType}
 
-			// Debuging
-			log.Printf("Camión %d : Iniciando camion del tipo %s\n", i, truckType)
-
 			for {
-
-				// Debuging
-				log.Printf("Camión %d : Esperando Primer Paquete ...\n", i)
 
 				for {
 					pkg, err := truckService.AskPackage(context.Background(), &ProtoLogistic.Truck{Type: truck.Type})
@@ -82,9 +76,6 @@ func main() {
 
 				actualTime := time.Now()
 				finishTime := actualTime.Add(time.Duration(MaxWait) * time.Second)
-
-				// Debuging
-				log.Printf("Camión %d : Esperando Segundo Paquete...\n", i)
 
 				for time.Now().Before(finishTime) {
 					pkg, err := truckService.AskPackage(context.Background(), &ProtoLogistic.Truck{Type: truck.Type})
@@ -131,9 +122,6 @@ func main() {
 						maxTries: pkgMaxTries})
 				}
 
-				// Debuging
-				log.Printf("Camión %d : Iniciando viajes\n", i)
-
 				for len(truck.pkgsToDeliver) != 0 {
 
 					truck.pkgsToDeliver[0].addATry()
@@ -142,18 +130,12 @@ func main() {
 
 					if rand.Intn(100) < 80 {
 
-						// Debuging
-						log.Printf("Camión %d : Entrega exitosa de %s\n", i, truck.pkgsToDeliver[0].pkg.GetIDPaquete())
-
 						truck.pkgsToDeliver[0].setStatus("Recibido")
 						truck.pkgsToDeliver[0].setDeliveredDate(true)
 						truck.pkgsDone = append(truck.pkgsDone, truck.pkgsToDeliver[0])
 						truck.pkgsToDeliver = truck.pkgsToDeliver[1:]
 
 					} else if truck.pkgsToDeliver[0].checkMaxTries() {
-
-						// Debuging
-						log.Printf("Camión %d : Quiting de %s\n", i, truck.pkgsToDeliver[0].pkg.GetIDPaquete())
 
 						truck.pkgsToDeliver[0].setStatus("No Recibido")
 						truck.pkgsToDeliver[0].setDeliveredDate(false)
@@ -166,9 +148,6 @@ func main() {
 				}
 
 				time.Sleep(time.Duration(TravelTime) * time.Second)
-
-				// Debuging
-				log.Printf("Camión %d : De vuelta en central.\n", i)
 
 				for _, pkg := range truck.pkgsDone {
 					truck.registry = append(truck.registry, pkg)
@@ -262,7 +241,6 @@ func writeRegistry(i int, pkg *pkgOnDeliver) {
 		pkg.pkg.GetDestino(),
 		strconv.Itoa(pkg.tries),
 		pkg.fecha}
-	fmt.Println("Escribirndo: ", toWrite)
 	err = writer.Write(toWrite)
 	if err != nil {
 		fmt.Println(err)

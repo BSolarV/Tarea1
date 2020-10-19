@@ -14,7 +14,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-const ipFinanzas = "localhost"
+const ipFinanzas = "10.10.28.66"
 
 func main() {
 
@@ -38,15 +38,12 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println("Finanzas")
 	conn, err := amqp.Dial("amqp://winducloveer:secret@" + ipFinanzas + ":5672/")
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
 	defer conn.Close()
-
-	fmt.Println("Conected")
 
 	channel, err := conn.Channel()
 	if err != nil {
@@ -188,7 +185,6 @@ func writeRegistry(pkg *Paquete, balance int) {
 		pkg.Estado,
 		strconv.Itoa(pkg.ValorOriginal),
 		strconv.Itoa(pkg.Balance)}
-	fmt.Println("Escribirndo: ", toWrite)
 	err = writer.Write(toWrite)
 	if err != nil {
 		fmt.Println(err)

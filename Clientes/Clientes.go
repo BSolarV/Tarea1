@@ -19,7 +19,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const ipLogistica = "localhost"
+const ipLogistica = "10.10.28.63"
 
 func main() {
 	var conn *grpc.ClientConn
@@ -96,6 +96,7 @@ func main() {
 				}
 				mutex.Lock()
 				index := int(rand.Intn(len(SegCodes)))
+				fmt.Printf("Enviando código de Seguimiento:  %s", SegCodes[index])
 				packag, err := clientService.CheckStatus(context.Background(), &ProtoLogistic.Package{Seguimiento: SegCodes[index]})
 				mutex.Unlock()
 				if err != nil {
@@ -216,16 +217,4 @@ func ParseRetail() []*ProtoLogistic.Package {
 		result = append(result, &packageToAdd)
 	}
 	return result
-}
-
-func printPackage(packag *ProtoLogistic.Package) {
-	fmt.Println("Printeando Paquete")
-	fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n desc: %s \n",
-		packag.GetIDPaquete(),
-		packag.GetTipo(),
-		packag.GetValor(),
-		packag.GetOrigen(),
-		packag.GetDestino(),
-		packag.GetProducto())
-	fmt.Println("Printeado!")
 }

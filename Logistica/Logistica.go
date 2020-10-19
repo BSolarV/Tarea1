@@ -20,10 +20,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-const ipLogistica = "localhost"
-const ipFinanzas = "localhost"
+const ipLogistica = "10.10.28.63"
+const ipFinanzas = "10.10.28.66"
 
 var finishLine time.Time
+
+//FinishMargin indica el tiempo máximo de inactividad
 var FinishMargin int
 
 func main() {
@@ -87,7 +89,7 @@ func main() {
 	go func() {
 		for {
 			if time.Now().After(finishLine) {
-				fmt.Printf("cerrando porque %s after %s", time.Now().Format("2006.01.02 15:04:05"), finishLine.Format("2006.01.02 15:04:05"))
+
 				ch.Close()
 				con.Close()
 				grpcServer.Stop()
@@ -164,9 +166,9 @@ Codigo de Getters
 
 // DeliverPackage hace la acción después del pedido del cliente.
 func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogistic.Package) (*ProtoLogistic.Package, error) {
-	fmt.Println(time.Now().Format("2006.01.02 15:04:05"), finishLine.Format("2006.01.02 15:04:05"))
+
 	finishLine = time.Now().Add(time.Duration(FinishMargin) * time.Minute)
-	fmt.Println(time.Now().Format("2006.01.02 15:04:05"), finishLine.Format("2006.01.02 15:04:05"))
+
 	//Se guardan en el registro
 	s.mutex.Lock()
 	s.packageCount++
@@ -190,8 +192,7 @@ func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogisti
 		s.normalQueue = append(s.normalQueue, clientPackage)
 	}
 	s.mutex.Unlock()
-	fmt.Print("DeliverPackage: ")
-	fmt.Printf("Id package : %s   Estado:  %s\n", clientPackage.GetIDPaquete(), clientPackage.GetEstado())
+
 	return clientPackage, nil
 }
 
@@ -201,8 +202,6 @@ func (s *Server) CheckStatus(ctx context.Context, clientPackage *ProtoLogistic.P
 	seguimiento := clientPackage.GetSeguimiento()
 	paq := s.registry[seguimiento]
 
-	fmt.Print("CheckStatus: ")
-	fmt.Printf("Id package : %s   Estado:  %s\n", paq.GetIDPaquete(), paq.GetEstado())
 	return paq, nil
 }
 
@@ -212,6 +211,7 @@ func (s *Server) CheckStatus(ctx context.Context, clientPackage *ProtoLogistic.P
 
 //AskPackage es la acción de pedir un paquete. Lo hace el camión
 func (s *Server) AskPackage(ctx context.Context, truck *ProtoLogistic.Truck) (*ProtoLogistic.Package, error) {
+
 	tipoCamion := truck.GetType()
 	var paq *ProtoLogistic.Package
 	paq = &ProtoLogistic.Package{IDPaquete: "-1"}
@@ -239,9 +239,9 @@ func (s *Server) AskPackage(ctx context.Context, truck *ProtoLogistic.Truck) (*P
 	if paq.GetIDPaquete() != "-1" {
 		s.mutex.Lock()
 		paq.Estado = "En camino"
+		finishLine = time.Now().Add(time.Duration(FinishMargin) * time.Minute)
 		s.mutex.Unlock()
-		fmt.Print("AskPackage: ")
-		fmt.Printf("Id package : %s   Estado:  %s\n", paq.GetIDPaquete(), paq.GetEstado())
+
 	}
 
 	return paq, nil
@@ -250,12 +250,12 @@ func (s *Server) AskPackage(ctx context.Context, truck *ProtoLogistic.Truck) (*P
 //FinishPackage es la acción que se hace cuando el camión termina la entrega
 func (s *Server) FinishPackage(ctx context.Context, truckPackage *ProtoLogistic.Package) (*ProtoLogistic.Empty, error) {
 	//Se actualiza el registro
+
+	finishLine = time.Now().Add(time.Duration(FinishMargin) * time.Minute)
+
 	s.mutex.Lock()
 	s.registry[truckPackage.GetIDPaquete()] = truckPackage
 	s.mutex.Unlock()
-
-	fmt.Print("FinishPackage: ")
-	fmt.Printf("Id package : %s   Estado:  %s\n", truckPackage.GetIDPaquete(), truckPackage.GetEstado())
 
 	s.mutex.Lock()
 	auxPaq := paqueteFinanza(truckPackage)
@@ -291,18 +291,6 @@ func (s *Server) SendToFinanzas(pkg Paquete) {
 		panic(er)
 	}
 
-}
-
-func printPackage(packag *ProtoLogistic.Package) {
-	fmt.Println("Printeando Paquete")
-	fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n desc: %s \n",
-		packag.GetIDPaquete(),
-		packag.GetTipo(),
-		packag.GetValor(),
-		packag.GetOrigen(),
-		packag.GetDestino(),
-		packag.GetProducto())
-	fmt.Println("Printeado!")
 }
 
 // Paquete : Estructura para facilitar marshaling en Json
@@ -363,8 +351,7 @@ func writeRegistry(clientPackage *ProtoLogistic.Package) {
 		strconv.Itoa(int(clientPackage.GetValor())),
 		clientPackage.GetOrigen(),
 		clientPackage.GetDestino(),
-		clientPackage.GetIDPaquete()}
-	fmt.Println("Escribirndo: ", toWrite)
+		clientPackage.GetSeguimiento()}
 	err = writer.Write(toWrite)
 	if err != nil {
 		fmt.Println(err)
