@@ -19,9 +19,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+const ipLogistica = "localhost"
+
 func main() {
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
+	conn, err := grpc.Dial(ipLogistica+":9000", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Couldn't connect: %s", err)
 	}

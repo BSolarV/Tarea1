@@ -20,6 +20,9 @@ import (
 	"google.golang.org/grpc"
 )
 
+const ipLogistica = "localhost"
+const ipFinanzas = "localhost"
+
 var finishLine time.Time
 var FinishMargin int
 
@@ -38,14 +41,14 @@ func main() {
 	}
 
 	//Conexión con grpc
-	lis, err := net.Listen("tcp", ":9000")
+	lis, err := net.Listen("tcp", ipLogistica+":9000")
 
 	if err != nil {
 		log.Fatalf("Fail listening on port 9000: %v", err)
 	}
 
 	//Conexión al servidor de rabbitmq
-	con, er := amqp.Dial("amqp://winducloveer:secret@localhost:5672/")
+	con, er := amqp.Dial("amqp://winducloveer:secret@" + ipFinanzas + ":5672/")
 	if er != nil {
 		fmt.Println(er)
 		panic(er)

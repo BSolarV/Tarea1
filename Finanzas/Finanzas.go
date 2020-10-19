@@ -14,6 +14,8 @@ import (
 	"github.com/streadway/amqp"
 )
 
+const ipFinanzas = "localhost"
+
 func main() {
 
 	reader := bufio.NewReader(os.Stdin)
@@ -37,7 +39,7 @@ func main() {
 	}
 
 	fmt.Println("Finanzas")
-	conn, err := amqp.Dial("amqp://winducloveer:secret@localhost:5672/")
+	conn, err := amqp.Dial("amqp://winducloveer:secret@" + ipFinanzas + ":5672/")
 	if err != nil {
 		fmt.Println(err)
 		panic(err)

@@ -1,8 +1,8 @@
 # Tarea 1
 
 ## WinduCloveer
-	> Carlos Jara Almendra - 201773036-5
-	> Bastián Solar Vargas - 201773003-k
+> Carlos Jara Almendra - 201773036-5
+> Bastián Solar Vargas - 201773003-k
 
 ## Maquinas Viruales:
 
@@ -72,6 +72,10 @@ El usuario de las máquinas es: sd
 * El registro se mostrará cada una cantidad definida de segundos que se solicitará al inicio de la ejecución.
 
 # Ejecución
+
+## Registros:
+* Para limpiar los registros se incluye el comando *clearRegisters* en el Makefile.
+	> make clearRegisters
 
 ## Logística:
 * Para el complilado se incluye un Makefile. Del cual se requiere compilar *Logistica* que creará un binario del mismo nombre en el directorio *bin*.
