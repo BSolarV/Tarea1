@@ -96,7 +96,7 @@ func main() {
 				}
 				mutex.Lock()
 				index := int(rand.Intn(len(SegCodes)))
-				fmt.Printf("Enviando código de Seguimiento:  %s", SegCodes[index])
+				fmt.Printf("Enviando código de Seguimiento:  %s\n", SegCodes[index])
 				packag, err := clientService.CheckStatus(context.Background(), &ProtoLogistic.Package{Seguimiento: SegCodes[index]})
 				mutex.Unlock()
 				if err != nil {

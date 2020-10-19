@@ -31,6 +31,6 @@
 
 ## Finanzas:
 * Para el complilado se incluye un Makefile. Del cual se requiere compilar *Finanzas* que creará un binario del mismo nombre en el directorio *bin*.
-	> make Finanzas
+	> make BuildFinanzas
 * La forma de ejecucion es por linea de comandos. Estando en la carpeta raiz del sistema (\~/Tarea1) ejecutar:
 	> ./bin/Finanzas

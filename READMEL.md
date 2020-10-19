@@ -33,7 +33,7 @@
 
 ## Logística:
 * Para el complilado se incluye un Makefile. Del cual se requiere compilar *Logistica* que creará un binario del mismo nombre en el directorio *bin*.
-	> make Logistica
+	> make BuildLogistica
 * La forma de ejecucion es por linea de comandos. Estando en la carpeta raiz del sistema (\~/Tarea1) ejecutar:  
 	> ./bin/Logistica
 

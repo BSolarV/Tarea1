@@ -97,24 +97,24 @@ El usuario de las máquinas es: sd
 
 ## Logística:
 * Para el complilado se incluye un Makefile. Del cual se requiere compilar *Logistica* que creará un binario del mismo nombre en el directorio *bin*.
-	> make Logistica
+	> make BuildLogistica
 * La forma de ejecucion es por linea de comandos. Estando en la carpeta raiz del sistema (\~/Tarea1) ejecutar:  
 	> ./bin/Logistica
 
 ## Clientes:
 * Para el complilado se incluye un Makefile. Del cual se requiere compilar *Clientes* que creará un binario del mismo nombre en el directorio *bin*.
-	> make Clientes
+	> make BuildClientes
 * La forma de ejecucion es por linea de comandos. Estando en la carpeta raiz del sistema (\~/Tarea1) ejecutar:  
 	> ./bin/Clientes
 
 ## Camiones:
 * Para el complilado se incluye un Makefile. Del cual se requiere compilar *Camiones* que creará un binario del mismo nombre en el directorio *bin*.
-	> make Camiones
+	> make BuildCamiones
 * La forma de ejecucion es por linea de comandos. Estando en la carpeta raiz del sistema (\~/Tarea1) ejecutar:  
 	> ./bin/Camiones 
 
 ## Finanzas:
 * Para el complilado se incluye un Makefile. Del cual se requiere compilar *Finanzas* que creará un binario del mismo nombre en el directorio *bin*.
-	> make Finanzas
+	> make BuildFinanzas
 * La forma de ejecucion es por linea de comandos. Estando en la carpeta raiz del sistema (\~/Tarea1) ejecutar:
 	> ./bin/Finanzas
