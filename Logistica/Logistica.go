@@ -31,7 +31,8 @@ func main() {
 	text, _ := reader.ReadString('\n')
 	text = strings.Replace(text, "\n", "", -1)
 	text = strings.Replace(text, "\r", "", -1)
-	FinishMargin, err := strconv.Atoi(text)
+	_FinishMargin, err := strconv.Atoi(text)
+	FinishMargin = _FinishMargin
 	if err != nil {
 		panic(err)
 	}
@@ -83,6 +84,7 @@ func main() {
 	go func() {
 		for {
 			if time.Now().After(finishLine) {
+				fmt.Printf("cerrando porque %s after %s", time.Now().Format("2006.01.02 15:04:05"), finishLine.Format("2006.01.02 15:04:05"))
 				ch.Close()
 				con.Close()
 				grpcServer.Stop()
@@ -159,9 +161,9 @@ Codigo de Getters
 
 // DeliverPackage hace la acción después del pedido del cliente.
 func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogistic.Package) (*ProtoLogistic.Package, error) {
-
+	fmt.Println(time.Now().Format("2006.01.02 15:04:05"), finishLine.Format("2006.01.02 15:04:05"))
 	finishLine = time.Now().Add(time.Duration(FinishMargin) * time.Minute)
-
+	fmt.Println(time.Now().Format("2006.01.02 15:04:05"), finishLine.Format("2006.01.02 15:04:05"))
 	//Se guardan en el registro
 	s.mutex.Lock()
 	s.packageCount++

@@ -78,7 +78,7 @@ func main() {
 
 	go func() {
 		for {
-			if time.Now().Before(finishLine) {
+			if time.Now().After(finishLine) {
 				forever <- true
 			}
 		}
