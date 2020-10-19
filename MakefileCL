@@ -1,4 +1,4 @@
 all: Clientes
 
-Logistica: 
-	go build -o ./Clientes /Clientes/Clientes.go
+Clientes: 
+	go build -o ./Clientes ./Clientes/Clientes.go
