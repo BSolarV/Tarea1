@@ -1,4 +1,0 @@
-all: Clientes
-
-Clientes: 
-	go build -o ./Clientes ./Clientes/Clientes.go

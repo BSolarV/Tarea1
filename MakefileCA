@@ -1,4 +1,0 @@
-all: Camiones
-
-Camiones: 
-	go build -o ./Camiones /Camiones/Camiones.go
