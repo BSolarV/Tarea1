@@ -1,19 +1,31 @@
 all: Logistica Clientes Camiones Finanzas
 
-Logistica: Logistica/Logistica.go
+Logistica: Logistica
+	make BuildLogistica
+
+Clientes: Clientes
+	make BuildClientes
+
+Camiones: Camiones
+	make BuildCamiones
+
+Finanzas: Finanzas
+	make BuildFinanzas
+
+BuildLogistica: Logistica/Logistica.go
 	go build -o ./bin/Logistica ./Logistica/Logistica.go
 
-Clientes: Logistica/Logistica.go
+BuildClientes: Clientes/Clientes.go
 	go build -o ./bin/Clientes ./Clientes/Clientes.go
 
-Camiones: Camiones/Camiones.go
+BuildCamiones: Camiones/Camiones.go
 	go build -o ./bin/Camiones ./Camiones/Camiones.go
 
-Finanzas: Finanzas/Finanzas.go
+BuildFinanzas: Finanzas/Finanzas.go
 	go build -o ./bin/Finanzas ./Finanzas/Finanzas.go
 
-clean:
+Buildclean:
 	rm -r ./bin
 
-clearRegisters:
+BuildclearRegisters:
 	rm *.csv
