@@ -7,9 +7,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	ProtoLogistic "github.com/BSolarV/Tarea1/ProtoLogistic"
 	"google.golang.org/grpc"
@@ -28,56 +32,105 @@ func main() {
 	pymesPackages := ParsePymes()
 	retailPackages := ParseRetail()
 
-	// var wg sync.WaitGroup
-
 	// For testing
 	reader := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Print("0 : Retail - 1 : Pyme - 3 : codigo -> ")
-		text, _ := reader.ReadString('\n')
-		text = strings.Replace(text, "\n", "", -1)
-		text = strings.Replace(text, "\r", "", -1)
-		if strings.Compare("0", text) == 0 {
-			if len(retailPackages) == 0 {
-				fmt.Println("We are out of that.")
-				continue
-			}
-			pack := retailPackages[0]
-			retailPackages = retailPackages[1:]
+	//Seteando comportamiento del cliente
+	fmt.Println("Ingrese nro. tipo cliente:  [Retail : 0 , Pyme : 1]  ")
+	tipoCliente, _ := reader.ReadString('\n')
+	tipoCliente = strings.Replace(tipoCliente, "\n", "", -1)
+	tipoCliente = strings.Replace(tipoCliente, "\r", "", -1)
 
-			_, err := clientService.DeliverPackage(context.Background(), pack)
-			if err != nil {
-				panic(err)
-			}
-		} else if strings.Compare("1", text) == 0 {
-			if len(pymesPackages) == 0 {
-				fmt.Println("We are out of that.")
-				continue
-			}
-			pack := pymesPackages[0]
-			pymesPackages = pymesPackages[1:]
-			response, err := clientService.DeliverPackage(context.Background(), pack)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Printf("El código de seguimiento es: %s \n", response.GetSeguimiento())
-		} else {
-			fmt.Print("Ingrese codigo de seguimiento -> ")
-			text, _ := reader.ReadString('\n')
-			text = strings.Replace(text, "\n", "", -1)
-			text = strings.Replace(text, "\r", "", -1)
-			packag, err := clientService.CheckStatus(context.Background(), &ProtoLogistic.Package{Seguimiento: text})
-			if err != nil {
-				panic(err)
-			}
-			fmt.Printf("desc: %s; valor: %d; Origen: %s; Destino: %s; \n \t ******* ESTADO : %s ********\n",
-				packag.GetProducto(),
-				packag.GetValor(),
-				packag.GetOrigen(),
-				packag.GetDestino(),
-				packag.GetEstado())
-		}
+	fmt.Println("Ingrese el tiempo entre pedidos del cliente: ")
+	tiempoEspera, _ := reader.ReadString('\n')
+	tiempoEspera = strings.Replace(tiempoEspera, "\n", "", -1)
+	tiempoEspera = strings.Replace(tiempoEspera, "\r", "", -1)
+
+	waitTime, _ := strconv.Atoi(tiempoEspera)
+
+	var mutex sync.Mutex
+
+	var SegCodes []string
+
+	auxPaq := retailPackages
+	if tipoCliente == "1" {
+		auxPaq = pymesPackages
 	}
+
+	var wg sync.WaitGroup
+
+	//"0 : Retail ,  1 : Pyme "
+	wg.Add(2)
+	go func() { //Hago peticiones
+		defer wg.Done()
+
+		for len(auxPaq) != 0 {
+			mutex.Lock()
+			if strings.Compare("0", tipoCliente) == 0 {
+				if len(retailPackages) == 0 {
+					fmt.Println("We are out of that.")
+					continue
+				}
+
+				pack := retailPackages[0]
+				retailPackages = retailPackages[1:]
+				_, err := clientService.DeliverPackage(context.Background(), pack)
+				if err != nil {
+					panic(err)
+				}
+
+			} else if strings.Compare("1", tipoCliente) == 0 {
+				if len(pymesPackages) == 0 {
+					fmt.Println("We are out of that.")
+					continue
+				}
+				pack := pymesPackages[0]
+				pymesPackages = pymesPackages[1:]
+				response, err := clientService.DeliverPackage(context.Background(), pack)
+				if err != nil {
+					panic(err)
+				}
+
+				SegCodes = append(SegCodes, response.GetSeguimiento())
+				fmt.Printf("El código de seguimiento es: %s \n", response.GetSeguimiento())
+			}
+			auxPaq = auxPaq[1:]
+			mutex.Unlock()
+			time.Sleep(time.Duration(waitTime) * time.Second)
+		}
+	}()
+	if tipoCliente == "1" {
+		go func() { //Hago Seguimiento
+			defer wg.Done()
+			for len(auxPaq) != 0 {
+				if len(SegCodes) == 0 {
+					continue
+				}
+				mutex.Lock()
+				index := int(rand.Intn(len(SegCodes)))
+				packag, err := clientService.CheckStatus(context.Background(), &ProtoLogistic.Package{Seguimiento: SegCodes[index]})
+				mutex.Unlock()
+				if err != nil {
+					panic(err)
+				}
+				fmt.Println("Consultando Estado")
+				fmt.Printf("Id: %s; type: %s; valor: %d; Origen: %s; Destino: %s; \n \t desc: %s \n \t ******* ESTADO : %s ********\n:",
+					packag.GetIDPaquete(),
+					packag.GetTipo(),
+					packag.GetValor(),
+					packag.GetOrigen(),
+					packag.GetDestino(),
+					packag.GetProducto(),
+					packag.GetEstado())
+				fmt.Println("Printeado!")
+				mutex.Lock()
+				swap := reflect.Swapper(SegCodes)
+				swap(0, index)
+				SegCodes = SegCodes[1:]
+				mutex.Unlock()
+			}
+		}()
+	}
+	wg.Wait()
 
 }
 
