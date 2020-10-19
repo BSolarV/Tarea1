@@ -37,7 +37,7 @@ func main() {
 	}
 
 	fmt.Println("Finanzas")
-	conn, err := amqp.Dial("amqp://winducloveer:secret@10.10.28.66:5672/")
+	conn, err := amqp.Dial("amqp://winducloveer:secret@localhost:5672/")
 	if err != nil {
 		fmt.Println(err)
 		panic(err)

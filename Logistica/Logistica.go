@@ -38,14 +38,14 @@ func main() {
 	}
 
 	//Conexión con grpc
-	lis, err := net.Listen("tcp", "10.10.28.63:9000")
+	lis, err := net.Listen("tcp", ":9000")
 
 	if err != nil {
 		log.Fatalf("Fail listening on port 9000: %v", err)
 	}
 
 	//Conexión al servidor de rabbitmq
-	con, er := amqp.Dial("amqp://winducloveer:secret@10.10.28.66:5672/")
+	con, er := amqp.Dial("amqp://winducloveer:secret@localhost:5672/")
 	if er != nil {
 		fmt.Println(er)
 		panic(er)

@@ -21,7 +21,7 @@ import (
 
 func main() {
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial("10.10.28.63:9000", grpc.WithInsecure())
+	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Couldn't connect: %s", err)
 	}
@@ -36,9 +36,11 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	//Seteando comportamiento del cliente
 	fmt.Println("Ingrese nro. tipo cliente:  [Retail : 0 , Pyme : 1]  ")
-	tipoCliente, _ := reader.ReadString('\n')
-	tipoCliente = strings.Replace(tipoCliente, "\n", "", -1)
-	tipoCliente = strings.Replace(tipoCliente, "\r", "", -1)
+	text, _ := reader.ReadString('\n')
+	text = strings.Replace(text, "\n", "", -1)
+	text = strings.Replace(text, "\r", "", -1)
+
+	tipoCliente, err := strconv.Atoi(text)
 
 	fmt.Println("Ingrese el tiempo entre pedidos del cliente: ")
 	tiempoEspera, _ := reader.ReadString('\n')
@@ -52,7 +54,7 @@ func main() {
 	var SegCodes []string
 
 	auxPaq := retailPackages
-	if tipoCliente == "1" {
+	if tipoCliente == 1 {
 		auxPaq = pymesPackages
 	}
 
@@ -73,7 +75,7 @@ func main() {
 				panic(err)
 			}
 
-			if "1" == tipoCliente {
+			if 1 == tipoCliente {
 				SegCodes = append(SegCodes, response.GetSeguimiento())
 				fmt.Printf("El código de seguimiento es: %s \n", response.GetSeguimiento())
 			}
@@ -82,7 +84,7 @@ func main() {
 			time.Sleep(time.Duration(waitTime) * time.Second)
 		}
 	}()
-	if tipoCliente == "1" {
+	if tipoCliente == 1 {
 		wg.Add(1)
 		go func() { //Hago Seguimiento
 			defer wg.Done()
