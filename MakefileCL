@@ -1,4 +1,4 @@
-all: build
+all: Clientes
 
-build: 
+Logistica: 
 	go build -o ./Clientes /Clientes/Clientes.go

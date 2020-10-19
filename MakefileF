@@ -1,4 +1,4 @@
-all: build
+all: Finanzas
 
-build: 
+Finanzas: 
 	go build -o ./Finanzas /Finanzas/Finanzas.go
