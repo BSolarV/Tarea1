@@ -1,15 +1,15 @@
 all: Logistica Clientes Camiones Finanzas
 
-Logistica: Logistica
+Logistica: bin/Logistica
 	make BuildLogistica
 
-Clientes: Clientes
+Clientes: bin/Clientes
 	make BuildClientes
 
-Camiones: Camiones
+Camiones: bin/Camiones
 	make BuildCamiones
 
-Finanzas: Finanzas
+Finanzas: bin/Finanzas
 	make BuildFinanzas
 
 BuildLogistica: Logistica/Logistica.go
