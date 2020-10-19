@@ -1,13 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strconv"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/streadway/amqp"
 
@@ -15,16 +20,31 @@ import (
 	"google.golang.org/grpc"
 )
 
+var finishLine time.Time
+var FinishMargin int
+
 func main() {
+
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Máximo tiempo de inactividad (en minutos): ")
+	text, _ := reader.ReadString('\n')
+	text = strings.Replace(text, "\n", "", -1)
+	text = strings.Replace(text, "\r", "", -1)
+	FinishMargin, err := strconv.Atoi(text)
+	if err != nil {
+		panic(err)
+	}
+
 	//Conexión con grpc
-	lis, err := net.Listen("tcp", "10.10.28.63:9000")
+	lis, err := net.Listen("tcp", ":9000")
 
 	if err != nil {
 		log.Fatalf("Fail listening on port 9000: %v", err)
 	}
 
 	//Conexión al servidor de rabbitmq
-	con, er := amqp.Dial("amqp://winducloveer:secret@10.10.28.66:5672/")
+	con, er := amqp.Dial("amqp://winducloveer:secret@localhost:5672/")
 	if er != nil {
 		fmt.Println(er)
 		panic(er)
@@ -58,17 +78,32 @@ func main() {
 
 	ProtoLogistic.RegisterProtoLogisticServiceServer(grpcServer, srv)
 
+	finishLine = time.Now().Add(time.Duration(FinishMargin) * time.Minute)
+
+	go func() {
+		for {
+			if time.Now().After(finishLine) {
+				ch.Close()
+				con.Close()
+				grpcServer.Stop()
+				lis.Close()
+				break
+			}
+		}
+	}()
+
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to mount GRPC server on port 9000: %v", err)
 	}
-	//###############################
 
 }
 
 //Server (server)
 type Server struct {
 	//Registro de Odín
-	registry map[string]*ProtoLogistic.Package
+	registry       map[string]*ProtoLogistic.Package
+	registryFile   *os.File
+	registryWriter *csv.Writer
 
 	//Para locks y unlocks
 	mutex sync.Mutex
@@ -124,6 +159,9 @@ Codigo de Getters
 
 // DeliverPackage hace la acción después del pedido del cliente.
 func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogistic.Package) (*ProtoLogistic.Package, error) {
+
+	finishLine = time.Now().Add(time.Duration(FinishMargin) * time.Minute)
+
 	//Se guardan en el registro
 	s.mutex.Lock()
 	s.packageCount++
@@ -135,6 +173,9 @@ func (s *Server) DeliverPackage(ctx context.Context, clientPackage *ProtoLogisti
 		clientPackage.Seguimiento = "0"
 	}
 	s.registry[clientPackage.GetIDPaquete()] = clientPackage
+
+	writeRegistry(clientPackage)
+
 	//Se añaden los objetos a la cola correspondiente
 	if clientPackage.GetTipo() == 1 {
 		s.retailQueue = append(s.retailQueue, clientPackage)
@@ -286,4 +327,41 @@ func paqueteFinanza(pkg *ProtoLogistic.Package) Paquete {
 	paq.Intentos = int(pkg.GetIntentos())
 	paq.ValorOriginal = int(pkg.GetValor())
 	return paq
+}
+
+func writeRegistry(clientPackage *ProtoLogistic.Package) {
+	file, err := os.OpenFile("registroLogistica.csv", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		file, err = os.Create("registroLogistica.csv")
+		if err != nil {
+			panic(err)
+		}
+	}
+	defer file.Close()
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Escritura en Registro
+	var tipo string
+	if clientPackage.GetTipo() == 1 {
+		tipo = "retail"
+	} else if clientPackage.GetTipo() == 2 {
+		tipo = "prioritario"
+	} else {
+		tipo = "normal"
+	}
+	toWrite := []string{
+		time.Now().Format("2006.01.02 15:04:05"),
+		clientPackage.GetIDPaquete(),
+		tipo,
+		clientPackage.GetProducto(),
+		strconv.Itoa(int(clientPackage.GetValor())),
+		clientPackage.GetOrigen(),
+		clientPackage.GetDestino(),
+		clientPackage.GetIDPaquete()}
+	fmt.Println("Escribirndo: ", toWrite)
+	err = writer.Write(toWrite)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

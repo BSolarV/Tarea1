@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -27,8 +27,17 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Print("Máximo tiempo de inactividad (en minutos): ")
+	text, _ = reader.ReadString('\n')
+	text = strings.Replace(text, "\n", "", -1)
+	text = strings.Replace(text, "\r", "", -1)
+	FinishMargin, err := strconv.Atoi(text)
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println("Finanzas")
-	conn, err := amqp.Dial("amqp://winducloveer:secret@10.10.28.66:5672/")
+	conn, err := amqp.Dial("amqp://winducloveer:secret@localhost:5672/")
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
@@ -65,6 +74,16 @@ func main() {
 	}()
 
 	forever := make(chan bool)
+	finishLine := time.Now().Add(time.Duration(FinishMargin) * time.Minute)
+
+	go func() {
+		for {
+			if time.Now().Before(finishLine) {
+				forever <- true
+			}
+		}
+	}()
+
 	var pkg Paquete
 	go func() {
 		for binaryPkg := range pkgs {
@@ -74,9 +93,14 @@ func main() {
 				panic(err)
 			}
 			finanzas.añadirPaquete(&pkg)
+			writeRegistry(&pkg, -999999)
+			finishLine = time.Now().Add(time.Duration(FinishMargin) * time.Minute)
 		}
 	}()
+
 	<-forever
+	fmt.Printf("El balance final es: %d", finanzas.balance)
+	writeRegistry(&pkg, int(finanzas.balance))
 }
 
 // Paquete : Estructura para facilitar marshaling en Json
@@ -136,10 +160,35 @@ func leftjust(s string, n int) string {
 	return s + strings.Repeat(" ", (n-len(s)))
 }
 
-func deserialize(b []byte) (Paquete, error) {
-	var msg Paquete
-	buf := bytes.NewBuffer(b)
-	decoder := json.NewDecoder(buf)
-	err := decoder.Decode(&msg)
-	return msg, err
+func writeRegistry(pkg *Paquete, balance int) {
+
+	file, err := os.OpenFile("registroFinanzas.csv", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		file, err = os.Create("registroFinanzas.csv")
+		if err != nil {
+			panic(err)
+		}
+	}
+	defer file.Close()
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+	if balance != -999999 {
+		err = writer.Write([]string{"total:", strconv.Itoa(balance)})
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	toWrite := []string{
+		pkg.IDPaquete,
+		pkg.Descripcion,
+		pkg.Tipo,
+		strconv.Itoa(pkg.Intentos),
+		pkg.Estado,
+		strconv.Itoa(pkg.ValorOriginal),
+		strconv.Itoa(pkg.Balance)}
+	fmt.Println("Escribirndo: ", toWrite)
+	err = writer.Write(toWrite)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
