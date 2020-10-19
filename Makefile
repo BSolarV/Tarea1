@@ -24,8 +24,8 @@ BuildCamiones: Camiones/Camiones.go
 BuildFinanzas: Finanzas/Finanzas.go
 	go build -o ./bin/Finanzas ./Finanzas/Finanzas.go
 
-Buildclean:
+clean:
 	rm -r ./bin
 
-BuildclearRegisters:
+clearRegisters:
 	rm *.csv
