@@ -1,4 +1,4 @@
 all: Finanzas
 
 Finanzas: 
-	go build -o ./Finanzas /Finanzas/Finanzas.go
+	go build -o ./Finanzas ./Finanzas/Finanzas.go

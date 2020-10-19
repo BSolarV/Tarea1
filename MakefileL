@@ -1,4 +1,4 @@
 all: Logistica
 
 Logistica: 
-	go build -o ./Logistica /Logistica/Logistica.go
+	go build -o ./Logistica ./Logistica/Logistica.go
